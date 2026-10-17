@@ -1,0 +1,1 @@
+Comprobaciones locales: YAML, sintaxis Python y sh -n correctas. Fixtures: manifiesto valido aceptado, checksum alterado y tar traversal rechazados. Orquestacion simulada: restauracion bloqueada con destino activo; app reiniciada tras fallo de pg_dump sin manifest completed. No se ejecuto Docker, SQL, TLS, app ni restauracion real. Completar docs/ACEPTACION.md en servidor.

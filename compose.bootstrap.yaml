@@ -1,0 +1,10 @@
+services:
+  preflight:
+    environment:
+      BOOTSTRAP_MODE: 'true'
+  app:
+    ports:
+    - 127.0.0.1:8117:7745
+    environment:
+      HBOX_OPTIONS_ALLOW_REGISTRATION: 'true'
+      HBOX_OPTIONS_HOSTNAME: http://localhost:8117

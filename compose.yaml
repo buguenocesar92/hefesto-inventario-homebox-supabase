@@ -1,0 +1,101 @@
+name: hefesto-inventario
+services:
+  permissions:
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    user: 0:0
+    restart: 'no'
+    entrypoint:
+    - sh
+    - -ec
+    command:
+    - chown -R 65532:65532 /files && chmod 700 /files
+    volumes:
+    - data:/files
+  preflight:
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    restart: 'no'
+    environment:
+      PGHOST: ${DB_HOST:?Definir DB_HOST}
+      PGPORT: '5432'
+      PGDATABASE: postgres
+      PGUSER: homebox_app
+      PGPASSWORD: ${DB_PASSWORD:?Definir DB_PASSWORD}
+      PGSSLMODE: verify-full
+      PGSSLROOTCERT: /certs/ca.crt
+      BOOTSTRAP_MODE: 'false'
+    entrypoint:
+    - sh
+    - /ops/preflight.sh
+    volumes:
+    - ./ops:/ops:ro
+    - ./certs:/certs:ro
+  app:
+    image: ghcr.io/sysadminsmedia/homebox:0.26.2-rootless@sha256:a41a3081ac724a2f4955b71b9294bd916b0e92035e4ea8438e84def74f4ae692
+    restart: unless-stopped
+    entrypoint:
+    - sh
+    - /ops/start.sh
+    environment:
+      HBOX_MODE: production
+      HBOX_DATABASE_DRIVER: postgres
+      HBOX_DATABASE_HOST: ${DB_HOST:?Definir DB_HOST}
+      HBOX_DATABASE_PORT: '5432'
+      HBOX_DATABASE_USERNAME: homebox_app
+      HBOX_DATABASE_PASSWORD: ${DB_PASSWORD:?Definir DB_PASSWORD}
+      HBOX_DATABASE_DATABASE: postgres
+      HBOX_DATABASE_SSL_MODE: verify-full
+      HBOX_DATABASE_SSL_ROOT_CERT: /certs/ca.crt
+      HBOX_STORAGE_CONN_STRING: file:///?no_tmp_dir=true
+      HBOX_STORAGE_PREFIX_PATH: data
+      HBOX_OPTIONS_HOSTNAME: ${APP_URL:?Definir APP_URL}
+      HBOX_OPTIONS_ALLOW_REGISTRATION: 'false'
+      HBOX_OPTIONS_ALLOW_ANALYTICS: 'false'
+      HBOX_OPTIONS_GITHUB_RELEASE_CHECK: 'false'
+      HBOX_OPTIONS_ALLOW_LOCAL_LOGIN: 'true'
+      HBOX_OPTIONS_TRUST_PROXY: 'false'
+      HBOX_WEB_MAX_UPLOAD_SIZE: '10'
+      HBOX_WEB_MAX_IMPORT_SIZE: '100'
+      HBOX_NOTIFIER_BLOCK_LOCAL_NETS: 'true'
+      HBOX_NOTIFIER_BLOCK_LOCALHOST: 'true'
+      HBOX_NOTIFIER_BLOCK_CLOUD_METADATA: 'true'
+      HBOX_OTEL_ENABLED: 'false'
+    depends_on:
+      permissions:
+        condition: service_completed_successfully
+      preflight:
+        condition: service_completed_successfully
+    volumes:
+    - data:/data
+    - ./certs:/certs:ro
+    - ./ops:/ops:ro
+    expose:
+    - '7745'
+    security_opt:
+    - no-new-privileges:true
+    cap_drop:
+    - ALL
+  dbtools:
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    profiles:
+    - tools
+    environment:
+      PGHOST: ${DB_HOST:?Definir DB_HOST}
+      PGPORT: '5432'
+      PGDATABASE: postgres
+      PGUSER: homebox_app
+      PGPASSWORD: ${DB_PASSWORD:?Definir DB_PASSWORD}
+      PGSSLMODE: verify-full
+      PGSSLROOTCERT: /certs/ca.crt
+    volumes:
+    - ./certs:/certs:ro
+  filetools:
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    profiles:
+    - tools
+    user: 0:0
+    entrypoint:
+    - sh
+    volumes:
+    - data:/files
+volumes:
+  data: {}
