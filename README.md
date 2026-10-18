@@ -33,11 +33,10 @@ El `compose.yaml` está pensado para Coolify build pack Docker Compose detrás d
   | `DB_NAME` | `postgres` | Nombre de la base de datos de esta app dentro del Postgres compartido (una base por app: p. ej. `mvp_inventario`). |
   | `DB_USER` | `homebox_app` | Rol SQL. Si usas pooler, define aquí el usuario con sufijo `.REF`. |
   | `DB_SSLMODE` | `verify-full` | Modo TLS. Con `disable` o `require` no se exige `certs/ca.crt` ni `sslrootcert`. |
-  | `DB_SSL_ROOT_CERT` | `/certs/ca.crt` | Ruta del CA dentro del contenedor; dejar vacía si `DB_SSLMODE != verify-full`. |
+  | `DB_SSL_ROOT_CERT` | `/certs/ca.crt` | Ruta del CA dentro del contenedor. Con `DB_SSLMODE=verify-full` es obligatorio que el archivo sea legible; con `disable` libpq/pgx lo ignoran, así que no hace falta dejarla vacía. |
   | `TRUST_PROXY` | `true` | Activa `HBOX_OPTIONS_TRUST_PROXY` para confiar en `X-Forwarded-*` del proxy. Solo mantenerlo en `true` si la app está publicada exclusivamente detrás del proxy de Coolify/Traefik (que sanea los encabezados). Poner `false` si la app queda expuesta directamente o detrás de un proxy que no sanea encabezados. |
 
-- `ops/start.sh` y `ops/preflight.sh` solo aceptan `DB_SSLMODE=verify-full` y exigen que `HBOX_DATABASE_SSL_ROOT_CERT`/`PGSSLROOTCERT` apunte a un CA legible. Cualquier otro modo (`verify-ca`, `require`, `prefer`, `allow`, `disable`) no verifica el certificado del servidor y aborta el arranque (fail-closed). Si necesitas desarrollo local, monta una red aislada y un Postgres propio: este kit no habilita TLS laxo en producción.
-- Mantén `certs/ca.crt` legible y montado; `ops/start.sh` solo exige su existencia cuando `DB_SSLMODE=verify-full`.
+- `ops/start.sh` y `ops/preflight.sh` aceptan los modos válidos de libpq (`disable|allow|prefer|require|verify-ca|verify-full`). Exigen CA legible solo con `DB_SSLMODE=verify-full`; con `disable` (red interna Docker hacia el Postgres compartido) arrancan sin `certs/ca.crt`.
 - El bootstrap privado se hace con el override `compose.bootstrap.yaml` (perfil temporal); no usar para producción.
 
 ## Límites
