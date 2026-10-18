@@ -132,18 +132,17 @@ check_supabase_pg_params() {
   local rendered="$1"
   local raw
   raw=$(jq -r '
-    [ .. | objects
-      | to_entries[]
-      | select((.key | test("^(HBOX_DATABASE_(DATABASE|USERNAME|SSL_MODE)|PGDATABASE|PGUSER|PGSSLMODE)$")))
-    ]
-    | map("\(.key)=\(.value|tostring)")
+    .services.app.environment
+    | to_entries
+    | map(select(.key | test("^HBOX_DATABASE_(DATABASE|SSL_MODE)$")))
+    | map("\(.key)=\(.value)")
     | join(" ")' "$rendered")
 
-  if ! grep -qE '(^| )(PGSSLMODE|HBOX_DATABASE_SSL_MODE)=disable($| )' <<<"$raw"; then
-    fail "compose supabase-pg: no se encontro sslmode=disable (no esta parametrizado)"
+  if ! grep -qE '(^| )HBOX_DATABASE_SSL_MODE=disable($| )' <<<"$raw"; then
+    fail "compose supabase-pg: no se encontro sslmode=disable en .services.app.environment (no esta parametrizado)"
   fi
-  if ! grep -qE '(^| )(PGDATABASE|HBOX_DATABASE_DATABASE)=mvp_prueba($| )' <<<"$raw"; then
-    fail "compose supabase-pg: no se encontro DB=mvp_prueba (no esta parametrizado)"
+  if ! grep -qE '(^| )HBOX_DATABASE_DATABASE=mvp_prueba($| )' <<<"$raw"; then
+    fail "compose supabase-pg: no se encontro DB=mvp_prueba en .services.app.environment (no esta parametrizado)"
   fi
 }
 
