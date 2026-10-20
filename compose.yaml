@@ -1,4 +1,3 @@
-name: hefesto-inventario
 services:
   permissions:
     image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
@@ -17,11 +16,11 @@ services:
     environment:
       PGHOST: ${DB_HOST:?Definir DB_HOST}
       PGPORT: '5432'
-      PGDATABASE: postgres
-      PGUSER: homebox_app
+      PGDATABASE: ${DB_NAME:-postgres}
+      PGUSER: ${DB_USER:-homebox_app}
       PGPASSWORD: ${DB_PASSWORD:?Definir DB_PASSWORD}
-      PGSSLMODE: verify-full
-      PGSSLROOTCERT: /certs/ca.crt
+      PGSSLMODE: ${DB_SSLMODE:-verify-full}
+      PGSSLROOTCERT: ${DB_SSL_ROOT_CERT:-/certs/ca.crt}
       BOOTSTRAP_MODE: 'false'
     entrypoint:
     - sh
@@ -40,11 +39,11 @@ services:
       HBOX_DATABASE_DRIVER: postgres
       HBOX_DATABASE_HOST: ${DB_HOST:?Definir DB_HOST}
       HBOX_DATABASE_PORT: '5432'
-      HBOX_DATABASE_USERNAME: homebox_app
+      HBOX_DATABASE_USERNAME: ${DB_USER:-homebox_app}
       HBOX_DATABASE_PASSWORD: ${DB_PASSWORD:?Definir DB_PASSWORD}
-      HBOX_DATABASE_DATABASE: postgres
-      HBOX_DATABASE_SSL_MODE: verify-full
-      HBOX_DATABASE_SSL_ROOT_CERT: /certs/ca.crt
+      HBOX_DATABASE_DATABASE: ${DB_NAME:-postgres}
+      HBOX_DATABASE_SSL_MODE: ${DB_SSLMODE:-verify-full}
+      HBOX_DATABASE_SSL_ROOT_CERT: ${DB_SSL_ROOT_CERT:-/certs/ca.crt}
       HBOX_STORAGE_CONN_STRING: file:///?no_tmp_dir=true
       HBOX_STORAGE_PREFIX_PATH: data
       HBOX_OPTIONS_HOSTNAME: ${APP_URL:?Definir APP_URL}
@@ -52,7 +51,7 @@ services:
       HBOX_OPTIONS_ALLOW_ANALYTICS: 'false'
       HBOX_OPTIONS_GITHUB_RELEASE_CHECK: 'false'
       HBOX_OPTIONS_ALLOW_LOCAL_LOGIN: 'true'
-      HBOX_OPTIONS_TRUST_PROXY: 'false'
+      HBOX_OPTIONS_TRUST_PROXY: ${TRUST_PROXY:-true}
       HBOX_WEB_MAX_UPLOAD_SIZE: '10'
       HBOX_WEB_MAX_IMPORT_SIZE: '100'
       HBOX_NOTIFIER_BLOCK_LOCAL_NETS: 'true'
@@ -81,11 +80,11 @@ services:
     environment:
       PGHOST: ${DB_HOST:?Definir DB_HOST}
       PGPORT: '5432'
-      PGDATABASE: postgres
-      PGUSER: homebox_app
+      PGDATABASE: ${DB_NAME:-postgres}
+      PGUSER: ${DB_USER:-homebox_app}
       PGPASSWORD: ${DB_PASSWORD:?Definir DB_PASSWORD}
-      PGSSLMODE: verify-full
-      PGSSLROOTCERT: /certs/ca.crt
+      PGSSLMODE: ${DB_SSLMODE:-verify-full}
+      PGSSLROOTCERT: ${DB_SSL_ROOT_CERT:-/certs/ca.crt}
     volumes:
     - ./certs:/certs:ro
   filetools:

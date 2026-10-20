@@ -18,6 +18,27 @@ Compose para Coolify, inicialización privada, registro cerrado en operación no
 
 No hay secretos reales, cuentas creadas ni conexión activa incluidos. El paquete es un kit de despliegue; el código original se obtiene mediante la imagen Docker fijada, no se incluye completo en el ZIP.
 
+## Despliegue en Coolify (MVP Hefesto)
+
+El `compose.yaml` está pensado para Coolify build pack Docker Compose detrás de Traefik (TLS y dominio los pone Coolify):
+
+- Sin `ports:` ni `name:` raíz fijo; Coolify asigna el nombre del proyecto y enruta el dominio al servicio `app` en el puerto interno `7745`.
+- Variables de base parametrizadas con defaults que conservan el uso original; ajusta solo lo que necesites:
+
+  | Variable | Default | Para qué |
+  | --- | --- | --- |
+  | `DB_HOST` | (obligatoria) | Host del proyecto Supabase dedicado (conexión directa 5432). |
+  | `DB_PASSWORD` | (obligatoria) | Contraseña del rol `homebox_app` creado con `sql/01-admin.sql`. |
+  | `APP_URL` | (obligatoria) | URL HTTPS pública que verá el navegador. |
+  | `DB_NAME` | `postgres` | Nombre de la base de datos de esta app dentro del Postgres compartido (una base por app: p. ej. `mvp_inventario`). |
+  | `DB_USER` | `homebox_app` | Rol SQL. Si usas pooler, define aquí el usuario con sufijo `.REF`. |
+  | `DB_SSLMODE` | `verify-full` | Modo TLS. Con `disable` o `require` no se exige `certs/ca.crt` ni `sslrootcert`. |
+  | `DB_SSL_ROOT_CERT` | `/certs/ca.crt` | Ruta del CA dentro del contenedor. Con `DB_SSLMODE=verify-full` es obligatorio que el archivo sea legible; con `disable` libpq/pgx lo ignoran, así que no hace falta dejarla vacía. |
+  | `TRUST_PROXY` | `true` | Activa `HBOX_OPTIONS_TRUST_PROXY` para confiar en `X-Forwarded-*` del proxy. Solo mantenerlo en `true` si la app está publicada exclusivamente detrás del proxy de Coolify/Traefik (que sanea los encabezados). Poner `false` si la app queda expuesta directamente o detrás de un proxy que no sanea encabezados. |
+
+- `ops/start.sh` y `ops/preflight.sh` aceptan los modos válidos de libpq (`disable|allow|prefer|require|verify-ca|verify-full`). Exigen CA legible solo con `DB_SSLMODE=verify-full`; con `disable` (red interna Docker hacia el Postgres compartido) arrancan sin `certs/ca.crt`.
+- El bootstrap privado se hace con el override `compose.bootstrap.yaml` (perfil temporal); no usar para producción.
+
 ## Límites
 Homebox no reemplaza un ERP, POS, sistema de contabilidad, control de stock transaccional o mantenimiento industrial. Para ventas y movimientos contables evaluar Odoo; para activos empresariales y asignaciones formales evaluar Snipe-IT. Este producto se orienta a inventarios sencillos de equipos y objetos.
 
